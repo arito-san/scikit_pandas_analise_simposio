@@ -13,7 +13,7 @@ import json
 
 # configurações do flask/pandas
 app = Flask(__name__)
-df = pd.read_csv("./assets/data.csv", sep=",",encoding='utf-8')
+df = pd.read_csv("./assets/data.csv", sep=",",encoding="ISO-8859-1")
 print("a",df)
 # x =
 
