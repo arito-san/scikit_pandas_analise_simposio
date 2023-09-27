@@ -1,0 +1,14 @@
+~ Crie um ambiente virtual ~
+python -m venv myenv
+
+~ Ative o ambiente virtual ~
+myenv\Scripts\activate.ps1
+
+~ Instalar dependências do requirements.txt: ~
+pip install -r requirements.txt
+
+~ Verifique as dependências instaladas ~
+pip list
+
+~ Desative o ambiente virtual ~
+deactivate
