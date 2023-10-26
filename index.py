@@ -1,94 +1,171 @@
 # Importação de bibliotecas necessárias
-from flask import Flask, Response, request
+from flask import Flask, Response, request,render_template
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
+from flask_cors import CORS
 import json
 
 # Criação de uma instância Flask
-app = Flask(__name__)
-
+app = Flask(__name__, template_folder='static', static_folder='static', static_url_path='/')
+CORS(app)
 # Carregamento do conjunto de dados do Titanic a partir de um arquivo CSV
-df = pd.read_csv("./assets/titanic.csv", sep=',')
+df = pd.read_csv("./assets/data.csv", sep=';', encoding="ISO-8859-1")
 
-# Tratamento de valores ausentes na coluna "Age" com a média das idades
-imputer = SimpleImputer(strategy='mean')
-df['Age'] = imputer.fit_transform(df[['Age']])
 
-# Codificação one-hot da coluna "Sex" para transformar valores categóricos em numéricos
-df = pd.get_dummies(df, columns=['Sex'], drop_first=True)
+colunas_confirmadas = ['dia_semana', 'idade', 'sexo', 'horario', 'fase_dia', 'sentido_via','tipo_pista', 'tracado_via','condicao_metereologica']
+df_filtrado = df[colunas_confirmadas]
+## Filtrar sexo
+df_filtrado['sexo'] = df_filtrado['sexo'].replace(
+    {'Masculino': 0, 'Feminino': 1})
+## filtrar dias)_da_semana
+dias_da_semana = {
+    'segunda-feira': 1,
+    'terça-feira': 2,
+    'quarta-feira': 3,
+    'quinta-feira': 4,
+    'sexta-feira': 5,
+    'sábado': 6,
+    'domingo': 7
+}
 
-# Seleção das características (features) que serão usadas para treinar o modelo
-features = ['Pclass', 'Age', 'Fare', 'SibSp', 'Parch', 'Sex_male']
+## filtrar dia_semana
+df_filtrado['dia_semana'] = df_filtrado['dia_semana'].map(dias_da_semana)
+valores_unicos = df_filtrado['dia_semana'].unique()
 
-# Definição das características (X) e dos rótulos (y)
-X = df[features]  # Características
-y = df['Survived']  # Rótulos
+## filtrar condicoes_meteorologicas
+condicoes_meteorologicas = {
+    'Céu Claro': 1,
+    'Chuva': 2,
+    'Garoa/Chuvisco': 3,
+    'Ignorado': 4,
+    'Nublado': 5,
+    'Sol': 6,
+    'Vento': 7
+}
+df_filtrado['condicao_metereologica'] = df_filtrado['condicao_metereologica'].map(
+    condicoes_meteorologicas)
 
-# Dividimos os dados em um conjunto de treinamento e um conjunto de teste (80% treinamento, 20% teste)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+## filtrar sentido_via
+sentido_via = {
+    'Crescente': 1,
+    'Decrescente': 2,
+    'Não informado': 3
+}
+df_filtrado['sentido_via'] = df_filtrado['sentido_via'].map(
+    sentido_via)
 
-# Criação de um modelo de classificação Random Forest
-model = RandomForestClassifier(random_state=42)
+## filtrar fase_dia
+fase_dia = {
+    'Amanhecer': 1,
+    'Anoitecer': 2,
+    'Plena Noite': 3,
+    'Pleno dia': 4,
+}
+df_filtrado['fase_dia'] = df_filtrado['fase_dia'].map(fase_dia)
 
-# Treinamento do modelo com os dados de treinamento
-model.fit(X_train, y_train)
+## filtrar tipo_pista
+tipo_pista = {
+    'Dupla': 1,
+    'Múltipla': 2,
+    'Simples': 3,
+}
+df_filtrado['tipo_pista'] = df_filtrado['tipo_pista'].map(tipo_pista)
 
-# Fazemos previsões com o modelo usando os dados de teste
-y_pred = model.predict(X_test)
+## filtrar tipo_pista
+tracado_via = {
+    'Curva': 1,
+    'Desvio Temporário': 2,
+    'Interseção de vias': 3,
+    'Não Informado': 4,
+    'Ponte': 5,
+    'Reta': 6,
+    'Retorno Regulamentado': 7,
+    'Túnel': 8,
+    'Viaduto': 9,
+}
+df_filtrado['tracado_via'] = df_filtrado['tracado_via'].map(tracado_via)
+df_filtrado['idade'] = df_filtrado['idade'].round().astype(int)
+df_filtrado.loc[:, 'idade'] = df_filtrado['idade'].round().astype(int)
+df_filtrado['horario'] = pd.to_datetime(df_filtrado['horario']).dt.hour
+df_filtrado = df_filtrado[df_filtrado['sexo'].isin([0, 1])]
+df_filtrado['dia_semana'].value_counts()
+df_filtrado['sexo'].value_counts()
 
-# Calculamos a acurácia do modelo
-accuracy = accuracy_score(y_test, y_pred)
-print(f"Acurácia do modelo: {accuracy * 100:.2f}%")
+bins = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+faixas_etarias = pd.cut(df_filtrado['idade'], bins)
+faixas_etarias.value_counts()
 
-# Criação de um novo passageiro com características específicas para fazer previsões
-def new_passenger(data):
+
+X = df_filtrado[['idade', 'sexo', 'horario', 'fase_dia', 'sentido_via','tipo_pista', 'tracado_via','condicao_metereologica']]
+y = df_filtrado['dia_semana']
+
+
+
+imputer = SimpleImputer(strategy='most_frequent')
+X = imputer.fit_transform(X)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42)
+modelo_arvore = RandomForestClassifier(
+    random_state=42, n_estimators=15, criterion="entropy")
+modelo_arvore.fit(X_train, y_train)
+y_pred = modelo_arvore.predict(X_test)
+modelo_arvore.predict_proba(X_test)
+precision = precision_score(y_test, y_pred, average='weighted')
+acc = accuracy_score(y_test, y_pred)
+print(f'Precisão: {precision:.2f}')
+a = classification_report(y_test, y_pred)
+print(a)
+def driver(data):
     return pd.DataFrame({
-        'Pclass': data['Pclass'],        # Classe do passageiro
-        'Age': data['Age'],              # Idade do passageiro
-        'Fare': data['Fare'],            # Tarifa paga pelo passageiro
-        'SibSp': data['SibSp'],          # Número de irmãos/cônjuges a bordo
-        'Parch': data['Parch'],          # Número de pais/filhos a bordo
-        'Sex_male': [data['Sex_male']]   # Gênero do passageiro codificado (1 para masculino)
-})
+        'idade': data['idade'],
+        'horario': data['horario'],
+        'sentido_via': [data['sentido_via']],
+        'tipo_pista': [data['tipo_pista']],
+        'tracado_via': [data['tracado_via']],
+        'condicao_metereologica': [data['condicao_metereologica']],
+        'fase_dia': [data['fase_dia']],
+        'sexo': [data['sexo']]
+    }) 
 
-def probability(data):
-# Faz a previsão de probabilidade de sobrevivência para o novo passageiro
-    probability = model.predict_proba(new_passenger(data))
-# A probabilidade de sobrevivência estará na segunda coluna (índice 1) para a classe "1" (sobrevivência)
-    survival_probability = probability[0][1]  # Probabilidade de sobreviver
-# Exibe a probabilidade de sobrevivência no terminal
-    return print(f"Probabilidade de sobrevivência: {survival_probability * 100:.2f}%")
+def dia_mais_provavel(data):
+    probabilidades = modelo_arvore.predict_proba(driver(data))
+    dias_da_semana = ['Segunda', 'Terça', 'Quarta',
+                      'Quinta', 'Sexta', 'Sábado', 'Domingo']
 
-# Definição de uma rota no Flask que retorna "Hello, World!" como resposta
+    probabilidade_maxima = max(probabilidades[0])
+    dia_mais_probavel = dias_da_semana[probabilidades[0].tolist().index(
+        probabilidade_maxima)]
+    return dia_mais_probavel, probabilidade_maxima
+
 @app.route('/')
 def hello_world():
-    return "<p>Hello, World!</p>"
-
-@app.route('/newPassenger', methods=['POST'])
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        print(e)
+    
+@app.route('/newDriver', methods=['POST'])
 def newPassenger():
     body = request.get_json()
-    probability(body)
+    dia, prob = dia_mais_provavel(body)
     try:
-        return response(201,"newPassenger",body, "Criado com sucesso")
+        return response(201,"dia", dia, prob)
     except Exception as e:
         print ()
-        return response(400,"newPassenger",{},"Erro ao cadastrar usuário")
+        return response(400,"newDriver",{},"Erro ao calcular probabilidade")
     
 # Configuração do response
 def response(status,contentName, content, mensagem=False):
     body = {}
     body[contentName] = content
     if(mensagem):
-        body["mensagem"]=mensagem
+        body["probabilidade"]=mensagem
     return Response(json.dumps(body), status=status, mimetype="application/json")
 
 # Configuração do servidor Flask para execução
 if __name__ == "__main__":
     with app.app_context():
-        app.run(debug=True)
+        app.run(debug=True,host='0.0.0.0', port=5000)
