@@ -15,7 +15,7 @@ CORS(app)
 df = pd.read_csv("./assets/data.csv", sep=';', encoding="ISO-8859-1")
 
 
-colunas_confirmadas = ['dia_semana', 'idade', 'sexo', 'horario', 'fase_dia', 'sentido_via','tipo_pista', 'tracado_via','condicao_metereologica']
+colunas_confirmadas = ['dia_semana', 'idade', 'sexo', 'horario', 'fase_dia', 'sentido_via','tipo_pista', 'tracado_via','condicao_metereologica','tipo_veiculo']
 df_filtrado = df[colunas_confirmadas]
 ## Filtrar sexo
 df_filtrado['sexo'] = df_filtrado['sexo'].replace(
@@ -56,6 +56,29 @@ sentido_via = {
 }
 df_filtrado['sentido_via'] = df_filtrado['sentido_via'].map(
     sentido_via)
+##filtrar tipo_veiculo
+tipo_veiculo = {
+    'Automóvel': 1,
+    'Bicicleta': 2,
+    'Caminhão': 3,
+    'Caminhão-trator': 4,
+    'Caminhonete': 5,
+    'Camioneta': 6,
+    'Carro de mão': 7,
+    'Carroça-charrete': 8,
+    'Ciclomoto': 9,
+    'Micro-ônibus': 10,
+    'Motocicleta': 11,
+    'Motoneta': 12,
+    'Não Informado': 13,
+    'Ônibus': 14,
+    'Outros': 15,
+    'Reboque': 16,
+    'Semireboque': 17,
+    'Utilitário': 18,
+}
+df_filtrado['tipo_veiculo'] = df_filtrado['tipo_veiculo'].map(
+    tipo_veiculo)
 
 ## filtrar fase_dia
 fase_dia = {
@@ -99,7 +122,7 @@ faixas_etarias = pd.cut(df_filtrado['idade'], bins)
 faixas_etarias.value_counts()
 
 
-X = df_filtrado[['idade', 'sexo', 'horario', 'fase_dia', 'sentido_via','tipo_pista', 'tracado_via','condicao_metereologica']]
+X = df_filtrado[['idade', 'sexo', 'horario', 'fase_dia', 'sentido_via','tipo_pista', 'tracado_via','condicao_metereologica','tipo_veiculo']]
 y = df_filtrado['dia_semana']
 
 
@@ -115,7 +138,8 @@ y_pred = modelo_arvore.predict(X_test)
 modelo_arvore.predict_proba(X_test)
 precision = precision_score(y_test, y_pred, average='weighted')
 acc = accuracy_score(y_test, y_pred)
-print(f'Precisão: {precision:.2f}')
+precisionScore = f'Precisão: {precision:.2f}'
+print(precisionScore)
 a = classification_report(y_test, y_pred)
 print(a)
 def driver(data):
@@ -127,7 +151,8 @@ def driver(data):
         'tracado_via': [data['tracado_via']],
         'condicao_metereologica': [data['condicao_metereologica']],
         'fase_dia': [data['fase_dia']],
-        'sexo': [data['sexo']]
+        'sexo': [data['sexo']],
+        'tipo_veiculo': [data['tipo_veiculo']],
     }) 
 
 def dia_mais_provavel(data):
