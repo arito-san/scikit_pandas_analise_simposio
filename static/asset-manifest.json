@@ -1,16 +1,19 @@
 {
   "files": {
-    "main.css": "/static/css/main.19592881.css",
-    "main.js": "/static/js/main.dbe84a25.js",
+    "main.css": "/static/css/main.07c9f4bd.css",
+    "main.js": "/static/js/main.9ad470e6.js",
     "static/js/787.2a8486e5.chunk.js": "/static/js/787.2a8486e5.chunk.js",
+    "static/media/crash2.png": "/static/media/crash2.7bab8eced413ffbdfd90.png",
+    "static/media/atv.png": "/static/media/atv.303259f4e2955eb687b3.png",
     "static/media/logo.png": "/static/media/logo.ebab16ba5d58d1c26e52.png",
+    "static/media/logo-estacio.png": "/static/media/logo-estacio.2210fa6c3c03362ef1f2.png",
     "index.html": "/index.html",
-    "main.19592881.css.map": "/static/css/main.19592881.css.map",
-    "main.dbe84a25.js.map": "/static/js/main.dbe84a25.js.map",
+    "main.07c9f4bd.css.map": "/static/css/main.07c9f4bd.css.map",
+    "main.9ad470e6.js.map": "/static/js/main.9ad470e6.js.map",
     "787.2a8486e5.chunk.js.map": "/static/js/787.2a8486e5.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.19592881.css",
-    "static/js/main.dbe84a25.js"
+    "static/css/main.07c9f4bd.css",
+    "static/js/main.9ad470e6.js"
   ]
 }
